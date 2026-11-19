@@ -4,10 +4,11 @@ import { sb } from '@/lib/supabase'
 
 type Q = { id: number; number: number; category_id: number; text: string; kind: string; answer_a: string; answer_b: string; answer_c: string; correct: string; media: string; points: number; explanation: string }
 const NAV = [['home','Strona główna'],['learn','Nauka'],['all','Wszystkie pytania'],['cats','Kategorie'],['exam','Egzamin państwowy'],['wrong','Błędne pytania'],['favs','Ulubione'],['stats','Statystyki'],['profile','Profil']]
-const card = 'rounded-2xl bg-white dark:bg-slate-800 shadow-sm p-5'
-const btn = 'rounded-xl px-4 py-2 font-medium transition hover:opacity-90 disabled:opacity-40 '
-const green = btn + 'bg-emerald-500 text-white', navy = btn + 'bg-slate-800 text-white dark:bg-slate-600', ghost = btn + 'border border-slate-300 dark:border-slate-600'
-const inp = 'rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 '
+const card = 'rounded-3xl bg-white dark:bg-slate-800 border border-stone-100 dark:border-slate-700 shadow-[0_2px_24px_rgba(20,33,61,0.06)] p-6'
+const btn = 'rounded-2xl px-5 py-2.5 font-semibold transition active:scale-[.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed '
+const green = btn + 'bg-emerald-600 text-white shadow-sm', navy = btn + 'bg-[#14213d] text-white dark:bg-slate-600', ghost = btn + 'border border-stone-300 dark:border-slate-600 bg-white/60 dark:bg-transparent'
+const inp = 'rounded-2xl border border-stone-300 dark:border-slate-600 bg-white dark:bg-transparent px-4 py-2.5 outline-none focus:ring-2 ring-emerald-300 '
+const MEDIA = (process.env.NEXT_PUBLIC_SUPABASE_URL || '') + '/storage/v1/object/public/media/'
 const shuffle = <T,>(a: T[]) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]] } return r }
 const mmss = (s: number) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0')
 async function fetchAll(t: string, order: string) {
@@ -24,7 +25,7 @@ function Auth() {
     if (k === 'up') { const { data, error } = await sb.auth.signUp({ email: e, password: p }); setM(error ? error.message : data.session ? '' : 'Sprawdź skrzynkę e-mail i potwierdź konto.') }
     if (k === 'rs') { const { error } = await sb.auth.resetPasswordForEmail(e, { redirectTo: location.origin }); setM(error ? error.message : 'Wysłano link do resetu hasła.') }
   }
-  return <div className="min-h-screen grid place-items-center bg-slate-900 p-4"><div className={card + ' w-full max-w-sm space-y-3'}>
+  return <div className="min-h-screen grid place-items-center bg-gradient-to-br from-emerald-50 to-stone-100 dark:from-slate-900 dark:to-slate-900 p-4"><div className={card + ' w-full max-w-sm space-y-3'}>
     <h1 className="text-2xl font-bold">Prawko<span className="text-emerald-500">Start</span></h1>
     <p className="text-sm text-slate-500">Zdaj prawo jazdy za pierwszym razem!</p>
     <input className={inp + 'w-full'} placeholder="E-mail" type="email" value={e} onChange={x => setE(x.target.value)} />
@@ -40,19 +41,19 @@ function QCard({ q, cat, sel, reveal, onPick, extra }: any) {
   const m: string = q.media
   return <div className={card}>
     <div className="flex flex-wrap gap-2 text-xs mb-3">
-      <span className="px-2 py-1 rounded-full bg-slate-800 text-white">#{q.number}</span>
+      <span className="px-2 py-1 rounded-full bg-[#14213d] text-white">#{q.number}</span>
       <span className="px-2 py-1 rounded-full bg-emerald-100 text-emerald-800">{cat}</span>
       <span className="px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700">{q.kind === 'basic' ? 'Podstawowe' : 'Specjalistyczne'} · {q.points} pkt</span>
     </div>
     {m && (/\.(jpe?g|png|gif|webp)$/i.test(m)
-      ? <img src={'/media/' + m} alt="" className="rounded-xl mb-3 max-h-80" />
-      : <video src={'/media/' + m.replace(/\.\w+$/, '.mp4')} controls autoPlay muted loop playsInline className="rounded-xl mb-3 max-h-80" />)}
+      ? <img src={MEDIA + m} alt="" className="rounded-xl mb-3 max-h-80" />
+      : <video src={MEDIA + m.replace(/\.\w+$/, '.mp4')} controls autoPlay muted loop playsInline className="rounded-xl mb-3 max-h-80" />)}
     <h2 className="text-lg font-semibold mb-4">{q.text}</h2>
     <div className="grid gap-2">{opts.map(([k, t]: any) => {
       let c = 'border-slate-300 dark:border-slate-600'
       if (reveal && sel) { if (k === q.correct) c = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/40'; else if (k === sel) c = 'border-red-500 bg-red-50 dark:bg-red-900/40' }
       else if (sel === k) c = 'border-slate-800 bg-slate-100 dark:bg-slate-700'
-      return <button key={k} onClick={() => onPick && onPick(k)} disabled={reveal && !!sel} className={'text-left rounded-xl border-2 px-4 py-3 transition ' + c}>
+      return <button key={k} onClick={() => onPick && onPick(k)} disabled={reveal && !!sel} className={'text-left rounded-2xl border-2 px-4 py-3.5 transition enabled:hover:border-emerald-400 ' + c}>
         <b className="mr-2">{q.kind === 'basic' ? '' : k + '.'}</b>{t}</button>
     })}</div>
     {reveal && sel && <div className="mt-4 text-sm">{sel === q.correct ? '✅ Poprawnie!' : '❌ Błędnie.'} Poprawna odpowiedź: <b>{q.correct === 'T' ? 'TAK' : q.correct === 'N' ? 'NIE' : q.correct}</b>
@@ -77,47 +78,119 @@ function Practice({ pool, cn, favs, onAnswer, toggleFav, report, seq, start = 0 
   </div>
 }
 
+function Ring({ left, total }: any) {
+  const r = 34, c = 2 * Math.PI * r, warn = left <= 5
+  return <div className="relative w-28 h-28 shrink-0"><svg viewBox="0 0 80 80" className="w-28 h-28 -rotate-90">
+    <circle cx="40" cy="40" r={r} fill="none" strokeWidth="7" className="stroke-stone-200 dark:stroke-slate-700" />
+    <circle cx="40" cy="40" r={r} fill="none" strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - left / total)} className={warn ? 'stroke-amber-500' : 'stroke-emerald-600'} style={{ transition: 'stroke-dashoffset .3s linear' }} /></svg>
+    <div className={'absolute inset-0 grid place-items-center text-4xl font-bold tabular-nums ' + (warn ? 'text-amber-600' : '')}>{left}</div></div>
+}
+
 function Exam({ qs, cn, onFinish }: any) {
-  const [st, setSt] = useState<any>(null), [i, setI] = useState(0), [, force] = useState(0), [res, setRes] = useState<any>(null), [left, setLeft] = useState(1500)
-  const ans = useRef<any>({}), fin = useRef(false)
-  const start = () => {
-    const p = (k: string, pt: number, n: number) => shuffle(qs.filter((q: Q) => q.kind === k && q.points === pt)).slice(0, n)
-    const list = [...shuffle([...p('basic', 3, 10), ...p('basic', 2, 6), ...p('basic', 1, 4)]), ...shuffle([...p('specialist', 3, 6), ...p('specialist', 2, 4), ...p('specialist', 1, 2)])]
-    if (list.length < 32) return alert('Za mało pytań w bazie. Zaimportuj pytania (npm run import).')
-    ans.current = {}; fin.current = false; setI(0); setLeft(1500); setRes(null); setSt({ list, t0: Date.now() })
+  const [st, setSt] = useState<any>(null), [pos, setPos] = useState({ i: 0, stage: 'learn' }), [now, setNow] = useState(Date.now()), [res, setRes] = useState<any>(null)
+  const [sel, setSel] = useState(''), [vid, setVid] = useState<'idle' | 'playing' | 'done'>('idle'), [pre, setPre] = useState(false)
+  const ans = useRef<any>({}), fin = useRef(false), dl = useRef(0), posR = useRef({ i: -1, stage: 'learn' }), listR = useRef<Q[]>([]), selR = useRef(''), lastGo = useRef(0), t0 = useRef(0), vref = useRef<HTMLVideoElement>(null)
+  const first = (q: Q) => q.kind === 'basic' ? 'learn' : 'answer'
+  const limit = (q: Q, s: string) => q.kind === 'basic' ? (s === 'learn' ? 20 : 15) : 50
+
+  const go = (i: number, stage: string) => {
+    const q = listR.current[i]
+    posR.current = { i, stage }; dl.current = Date.now() + limit(q, stage) * 1000; lastGo.current = Date.now()
+    selR.current = ''; setSel('')
+    if (stage === 'learn' || q.kind === 'specialist') setVid('idle')
+    setPos({ i, stage }); setNow(Date.now())
   }
   const finish = async () => {
     if (fin.current) return; fin.current = true
-    const list: Q[] = st.list; let score = 0
+    const list = listR.current; let score = 0
     list.forEach(q => { if (ans.current[q.id] === q.correct) score += q.points })
-    const secs = Math.min(1500, Math.round((Date.now() - st.t0) / 1000))
+    const secs = Math.round((Date.now() - t0.current) / 1000)
     setRes({ score, secs, passed: score >= 68, list })
     await onFinish(list, ans.current, score, secs)
   }
+  const next = (a?: string) => {
+    const { i } = posR.current, list = listR.current
+    if (a) ans.current[list[i].id] = a
+    if (i >= list.length - 1) return finish()
+    go(i + 1, first(list[i + 1]))
+  }
+  const start = () => {
+    const p = (k: string, pt: number, n: number) => shuffle(qs.filter((q: Q) => q.kind === k && q.points === pt)).slice(0, n)
+    const list = [...shuffle([...p('basic', 3, 10), ...p('basic', 2, 6), ...p('basic', 1, 4)]), ...shuffle([...p('specialist', 3, 6), ...p('specialist', 2, 4), ...p('specialist', 1, 2)])]
+    if (list.length < 32) return alert('Za mało pytań w bazie. Zaimportuj pytania (pliki seed w Supabase).')
+    ans.current = {}; fin.current = false; listR.current = list; t0.current = Date.now(); posR.current = { i: -1, stage: 'learn' }
+    setRes(null); setPre(false); setSt({ list }); go(0, first(list[0]))
+  }
+  // Czas liczony od znacznika czasu (Date.now), więc nie da się go zatrzymać ani zresetować klikaniem.
   useEffect(() => {
     if (!st || res) return
-    const t = setInterval(() => { const l = Math.max(0, 1500 - Math.floor((Date.now() - st.t0) / 1000)); setLeft(l); if (l === 0) finish() }, 500)
+    const t = setInterval(() => {
+      setNow(Date.now())
+      if (Date.now() >= dl.current && !fin.current) {
+        const { i, stage } = posR.current
+        if (stage === 'learn') go(i, 'answer'); else next(selR.current || undefined)
+      }
+    }, 200)
     return () => clearInterval(t)
   }, [st, res])
-  if (!st) return <div className={card + ' space-y-3'}><h2 className="text-xl font-bold">Egzamin państwowy – kat. B</h2>
-    <p>32 pytania: 20 z wiedzy podstawowej (TAK/NIE, 46 pkt) i 12 specjalistycznych (A/B/C, 28 pkt). Maks. 74 pkt, próg zaliczenia 68 pkt, czas 25 minut. Nie można wracać do poprzednich pytań.</p>
-    <button className={green} onClick={start}>Rozpocznij egzamin</button></div>
+
+  const pick = (k: string) => {
+    if (Date.now() - lastGo.current < 500 || posR.current.stage !== 'answer') return  // ochrona przed podwójnym kliknięciem
+    const q = listR.current[posR.current.i]
+    if (q.kind === 'basic') next(k); else { selR.current = k; setSel(k) }
+  }
+  const confirm = () => { if (selR.current && Date.now() - lastGo.current >= 500) next(selR.current) }
+  const play = () => { if (vid === 'idle') { vref.current?.play(); setVid('playing') } }
+
+  if (!st && !pre) return <div className={card + ' space-y-4'}><h2 className="text-2xl font-bold">Egzamin państwowy – kat. B</h2>
+    <p>32 pytania: 20 z wiedzy podstawowej (TAK/NIE, 46 pkt) i 12 specjalistycznych (A/B/C, 28 pkt). Maks. 74 pkt, próg zaliczenia 68 pkt.</p>
+    <ul className="list-disc ml-5 text-sm space-y-1"><li>Pytanie podstawowe: 20 s na zapoznanie się z pytaniem i filmem, potem 15 s na odpowiedź TAK lub NIE.</li><li>Pytanie specjalistyczne: 50 s na odpowiedź A, B lub C.</li><li>Czasu nie można zatrzymać, a do poprzednich pytań nie można wrócić.</li><li>Poprawne odpowiedzi poznasz dopiero po zakończeniu egzaminu.</li></ul>
+    <button className={green} onClick={() => setPre(true)}>Przejdź do egzaminu</button></div>
+  if (!st) return <div className="fixed inset-0 z-50 grid place-items-center bg-[#f7f6f2] dark:bg-slate-900 p-6"><div className="text-center space-y-6 max-w-md">
+    <div className="mx-auto h-36 w-36 rounded-full bg-emerald-100 dark:bg-emerald-900/40 animate-pulse grid place-items-center text-emerald-700 dark:text-emerald-300 font-semibold">Wdech… wydech…</div>
+    <h2 className="text-2xl font-bold">Masz czas, nie spiesz się</h2>
+    <p className="text-slate-600 dark:text-slate-300">Weź kilka spokojnych oddechów. Kiedy będziesz gotowy, zacznij egzamin.</p>
+    <div className="flex gap-3 justify-center"><button className={ghost} onClick={() => setPre(false)}>Wróć</button><button className={green} onClick={start}>Jestem gotowy</button></div></div></div>
   if (res) {
     const sum = (k: string) => res.list.filter((q: Q) => q.kind === k && ans.current[q.id] === q.correct).reduce((s: number, q: Q) => s + q.points, 0)
     const bad = res.list.filter((q: Q) => ans.current[q.id] !== q.correct)
-    return <div className="space-y-3"><div className={card + ' text-center'}>
-      <div className={'text-4xl font-bold ' + (res.passed ? 'text-emerald-500' : 'text-red-500')}>{res.passed ? 'ZDANY' : 'NIEZDANY'}</div>
-      <p className="text-xl mt-2">{res.score} / 74 pkt (próg: 68)</p>
+    const byCat: any = {}; bad.forEach((q: Q) => { const n = cn(q.category_id); byCat[n] = (byCat[n] || 0) + 1 })
+    const top = Object.entries(byCat).sort((a: any, b: any) => b[1] - a[1]).slice(0, 3)
+    return <div className="space-y-4"><div className={'rounded-3xl p-8 text-center space-y-2 border ' + (res.passed ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800')}>
+      <div className={'text-4xl font-bold ' + (res.passed ? 'text-emerald-700' : 'text-amber-700')}>{res.passed ? '🎉 Zdane!' : 'Jeszcze nie tym razem'}</div>
+      <p className="text-2xl">{res.score} / 74 pkt <span className="text-base text-slate-500">(próg: 68)</span></p>
+      <p className="font-semibold">Wynik: {res.passed ? 'ZDANY' : 'NIEZDANY'}</p>
       <p className="text-sm text-slate-500">Czas: {mmss(res.secs)} · Podstawowe: {sum('basic')}/46 · Specjalistyczne: {sum('specialist')}/28 · Błędne lub bez odpowiedzi: {bad.length}</p>
+      {top.length > 0 && <p className="text-sm">Najczęstsze błędy: {top.map(([n, c]: any) => n + ' (' + c + ')').join(', ')}. Warto je poćwiczyć.</p>}
       <button className={green + ' mt-3'} onClick={() => setSt(null)}>Nowy egzamin</button></div>
       {bad.map((q: Q) => <QCard key={q.id} q={q} cat={cn(q.category_id)} sel={ans.current[q.id] || '-'} reveal />)}</div>
   }
-  const q: Q = st.list[i], last = i === st.list.length - 1
-  return <div className="space-y-3">
-    <div className="flex justify-between font-semibold"><span>Pytanie {i + 1} / 32</span><span className={left < 120 ? 'text-red-500' : ''}>⏱ {mmss(left)}</span></div>
-    <QCard q={q} cat={cn(q.category_id)} sel={ans.current[q.id]} onPick={(a: string) => { ans.current[q.id] = a; force(n => n + 1) }}
-      extra={<div className="mt-4"><button className={green} disabled={!ans.current[q.id]} onClick={() => last ? finish() : setI(i + 1)}>{last ? 'Zakończ egzamin' : 'Dalej →'}</button></div>} />
-  </div>
+
+  const q: Q = st.list[pos.i], left = Math.max(0, Math.ceil((dl.current - now) / 1000)), m: string = q.media
+  const isVid = !!m && !/\.(jpe?g|png|gif|webp)$/i.test(m), basic = q.kind === 'basic', canAns = pos.stage === 'answer'
+  const hint = pos.i >= 27 ? 'Ostatnie pytania, prawie koniec.' : basic && !canAns ? 'Spokojnie przeczytaj pytanie.' : ''
+  return <div className="fixed inset-0 z-50 overflow-auto bg-[#f7f6f2] dark:bg-slate-900 p-4 md:p-8"><div className="max-w-4xl mx-auto space-y-4">
+    <div className="flex items-center justify-between gap-4">
+      <div className="space-y-2"><div className="text-2xl font-bold">Pytanie {pos.i + 1}/32</div>
+        <div className="text-sm text-slate-500">{basic ? 'Wiedza podstawowa' : 'Wiedza specjalistyczna'} · {basic && !canAns ? 'zapoznanie z pytaniem' : 'czas na odpowiedź'}</div>
+        <div className="flex flex-wrap gap-1.5 max-w-xs">{st.list.map((_: any, k: number) => <span key={k} className={'h-2.5 w-2.5 rounded-full ' + (k < pos.i ? 'bg-emerald-600' : k === pos.i ? 'bg-[#14213d] dark:bg-white scale-125' : 'bg-stone-300 dark:bg-slate-600')} />)}</div></div>
+      <Ring left={left} total={limit(q, pos.stage)} /></div>
+    {hint && <p className="text-sm text-slate-500">{hint}</p>}
+    <div className={card + ' space-y-4'}>
+      <h2 className="text-xl font-semibold">{q.text}</h2>
+      {m && (isVid
+        ? <div className="space-y-3"><div className="relative rounded-xl overflow-hidden bg-black aspect-video max-h-96 w-full">
+            <video key={q.id} ref={vref} src={MEDIA + m.replace(/\.\w+$/, '.mp4')} playsInline preload="auto" onEnded={() => setVid('done')} className="w-full h-full object-contain" />
+            {vid === 'idle' && <div className="absolute inset-0 bg-black grid place-items-center text-slate-400 text-sm">Kliknij ZOBACZ FILM</div>}</div>
+          <button className={green + ' text-lg'} disabled={vid !== 'idle' || (basic && !(pos.stage === 'learn'))} onClick={play}>{vid === 'playing' ? 'FILM TRWA…' : vid === 'done' ? 'FILM OBEJRZANY' : 'ZOBACZ FILM'}</button></div>
+        : <img src={MEDIA + m} alt="" className="rounded-xl max-h-96 mx-auto" />)}
+      {basic ? <>
+        {!canAns && <p className="text-sm text-slate-500">Przeczytaj pytanie{isVid ? ' i obejrzyj film' : ''}. Odpowiedź będzie możliwa po zakończeniu odliczania.</p>}
+        <div className="grid grid-cols-2 gap-4">{[['T', 'TAK'], ['N', 'NIE']].map(([k, t]) => <button key={k} disabled={!canAns} onClick={() => pick(k)} className={btn + 'py-6 text-2xl font-bold bg-[#14213d] text-white dark:bg-slate-600'}>{t}</button>)}</div></>
+      : <>
+        <div className="grid gap-2">{[['A', q.answer_a], ['B', q.answer_b], ['C', q.answer_c]].map(([k, t]) => <button key={k} onClick={() => pick(k)} className={'text-left rounded-2xl border-2 px-4 py-3.5 transition enabled:hover:border-emerald-400 ' + (sel === k ? 'border-slate-800 bg-slate-100 dark:bg-slate-700' : 'border-slate-300 dark:border-slate-600')}><b className="mr-2">{k}.</b>{t}</button>)}</div>
+        <button className={green + ' text-lg'} disabled={!sel} onClick={confirm}>ZATWIERDŹ ODPOWIEDŹ</button></>}
+    </div></div></div>
 }
 
 export default function App() {
@@ -192,9 +265,9 @@ export default function App() {
   if (view === 'home') {
     const l5 = done.slice(-5), passed = l5.filter(e => e.passed).length
     body = <>
-      <div className="rounded-2xl bg-slate-900 text-white p-8"><h1 className="text-3xl md:text-4xl font-bold">Zdaj prawo jazdy za pierwszym razem!</h1>
-        <p className="mt-2 text-slate-300">Ucz się codziennie, poprawiaj błędy i sprawdzaj się na egzaminach próbnych.</p>
-        <div className="flex gap-2 mt-4 flex-wrap"><button className={green} onClick={() => setView('learn')}>Rozpocznij naukę</button><button className={btn + 'bg-white text-slate-900'} onClick={() => setView('exam')}>Rozwiąż egzamin</button></div></div>
+      <div className="rounded-3xl bg-gradient-to-br from-emerald-50 via-white to-stone-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 border border-emerald-100 dark:border-slate-700 p-8"><h1 className="text-3xl md:text-4xl font-bold">Zdaj prawo jazdy za pierwszym razem!</h1>
+        <p className="mt-2 text-slate-600 dark:text-slate-300">Ucz się codziennie, poprawiaj błędy i sprawdzaj się na egzaminach próbnych.</p>
+        <div className="flex gap-2 mt-4 flex-wrap"><button className={green} onClick={() => setView('learn')}>Rozpocznij naukę</button><button className={navy} onClick={() => setView('exam')}>Rozwiąż egzamin</button></div></div>
       <div className="grid sm:grid-cols-3 gap-3">
         <div className={card}><div className="text-sm text-slate-500">Rozwiązane pytania</div><div className="text-3xl font-bold">{att.length}</div></div>
         <div className={card}><div className="text-sm text-slate-500">Poprawne odpowiedzi</div><div className="text-3xl font-bold text-emerald-500">{pct(okN, att.length)}%</div></div>
@@ -251,10 +324,10 @@ export default function App() {
   }
 
   return <div className="min-h-screen md:flex">
-    <aside className="md:w-60 shrink-0 bg-slate-900 text-white md:min-h-screen p-3 md:p-4 flex md:flex-col gap-2 overflow-x-auto md:overflow-visible">
-      <div className="font-bold text-xl text-emerald-400 md:mb-4 shrink-0 self-center md:self-start">Prawko<span className="text-white">Start</span></div>
-      {NAV.map(([k, l]) => <button key={k} onClick={() => { setView(k); setSub(null); if (k !== 'learn') setCatF(0) }} className={'text-left whitespace-nowrap rounded-xl px-3 py-2 transition ' + (view === k ? 'bg-emerald-500' : 'hover:bg-slate-700')}>{l}</button>)}
-      <button className="md:mt-auto whitespace-nowrap rounded-xl px-3 py-2 hover:bg-slate-700 text-left" onClick={() => setDark(!dark)}>{dark ? '☀ Tryb jasny' : '🌙 Tryb ciemny'}</button>
+    <aside className="md:w-60 shrink-0 bg-white dark:bg-slate-800 border-r border-stone-200 dark:border-slate-700 md:min-h-screen p-3 md:p-4 flex md:flex-col gap-2 overflow-x-auto md:overflow-visible">
+      <div className="font-bold text-xl text-emerald-600 md:mb-4 shrink-0 self-center md:self-start">Prawko<span className="text-[#14213d] dark:text-white">Start</span></div>
+      {NAV.map(([k, l]) => <button key={k} onClick={() => { setView(k); setSub(null); if (k !== 'learn') setCatF(0) }} className={'text-left whitespace-nowrap rounded-2xl px-4 py-2.5 transition ' + (view === k ? 'bg-emerald-600 text-white shadow-sm' : 'hover:bg-stone-100 dark:hover:bg-slate-700')}>{l}</button>)}
+      <button className="md:mt-auto whitespace-nowrap rounded-2xl px-4 py-2.5 hover:bg-stone-100 dark:hover:bg-slate-700 text-left" onClick={() => setDark(!dark)}>{dark ? '☀ Tryb jasny' : '🌙 Tryb ciemny'}</button>
     </aside>
     <main className="flex-1 p-4 md:p-8 max-w-4xl w-full mx-auto space-y-4">{qs.length === 0 ? <div className={card}>Ładowanie pytań… (jeśli trwa długo, zaimportuj pytania: npm run import)</div> : body}</main>
   </div>
