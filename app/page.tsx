@@ -4,12 +4,10 @@ import { sb } from '@/lib/supabase'
 
 type Q = { id: number; number: number; category_id: number; text: string; kind: string; answer_a: string; answer_b: string; answer_c: string; correct: string; media: string; points: number; explanation: string }
 const NAV = [['home','Strona główna'],['learn','Nauka'],['all','Wszystkie pytania'],['cats','Kategorie'],['exam','Egzamin państwowy'],['wrong','Błędne pytania'],['favs','Ulubione'],['stats','Statystyki'],['profile','Profil']]
-
 const card = 'rounded-3xl bg-white dark:bg-slate-800 border border-stone-100 dark:border-slate-700 shadow-[0_2px_24px_rgba(20,33,61,0.06)] p-6'
 const btn = 'rounded-2xl px-5 py-2.5 font-semibold transition active:scale-[.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed '
 const green = btn + 'bg-emerald-600 text-white shadow-sm', navy = btn + 'bg-[#14213d] text-white dark:bg-slate-600', ghost = btn + 'border border-stone-300 dark:border-slate-600 bg-white/60 dark:bg-transparent'
 const inp = 'rounded-2xl border border-stone-300 dark:border-slate-600 bg-white dark:bg-transparent px-4 py-2.5 outline-none focus:ring-2 ring-emerald-300 '
-
 const MEDIA = (process.env.NEXT_PUBLIC_SUPABASE_URL || '') + '/storage/v1/object/public/media/'
 const shuffle = <T,>(a: T[]) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]] } return r }
 const mmss = (s: number) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0')
@@ -117,8 +115,8 @@ function Exam({ qs, cn, onFinish }: any) {
     go(i + 1, first(list[i + 1]))
   }
   const start = () => {
-    const p = (k: string, pt: number, n: number) => shuffle(qs.filter((q: Q) => q.kind === k && q.points === pt)).slice(0, n)
-    const list = [...shuffle([...p('basic', 3, 10), ...p('basic', 2, 6), ...p('basic', 1, 4)]), ...shuffle([...p('specialist', 3, 6), ...p('specialist', 2, 4), ...p('specialist', 1, 2)])]
+    const p = (k: string, pt: number, n: number): Q[] => shuffle<Q>(qs.filter((q: Q) => q.kind === k && q.points === pt)).slice(0, n)
+    const list: Q[] = [...shuffle<Q>([...p('basic', 3, 10), ...p('basic', 2, 6), ...p('basic', 1, 4)]), ...shuffle<Q>([...p('specialist', 3, 6), ...p('specialist', 2, 4), ...p('specialist', 1, 2)])]
     if (list.length < 32) return alert('Za mało pytań w bazie. Zaimportuj pytania (pliki seed w Supabase).')
     ans.current = {}; fin.current = false; listR.current = list; t0.current = Date.now(); posR.current = { i: -1, stage: 'learn' }
     setRes(null); setPre(false); setSt({ list }); go(0, first(list[0]))
