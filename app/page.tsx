@@ -63,13 +63,14 @@ function QCard({ q, cat, sel, reveal, onPick, extra }: any) {
 }
 
 function Practice({ pool, cn, favs, onAnswer, toggleFav, report, seq, start = 0 }: any) {
-  const [order] = useState(() => seq ? pool : shuffle(pool)), [i, setI] = useState(Math.min(start, Math.max(pool.length - 1, 0))), [sels, setSels] = useState<any>({})
+  const [order] = useState(() => seq ? pool : shuffle(pool)), [i, setI] = useState(Math.min(start, Math.max(pool.length - 1, 0))), [sels, setSels] = useState<any>({}), [pend, setPend] = useState<any>({})
   if (!order.length) return <div className={card}>Brak pytań do rozwiązania.</div>
   const q = order[i], sel = sels[q.id]
   return <div className="space-y-3">
     <div className="text-sm text-slate-500">Pytanie {i + 1} / {order.length}</div>
-    <QCard q={q} cat={cn(q.category_id)} sel={sel} reveal onPick={(a: string) => { setSels({ ...sels, [q.id]: a }); onAnswer(q, a) }} extra={
+    <QCard q={q} cat={cn(q.category_id)} sel={sel || pend[q.id]} reveal={!!sel} onPick={(a: string) => { if (!sel) setPend({ ...pend, [q.id]: a }) }} extra={
       <div className="flex flex-wrap gap-2 mt-4">
+        <button className={green} disabled={!!sel || !pend[q.id]} onClick={() => { setSels({ ...sels, [q.id]: pend[q.id] }); onAnswer(q, pend[q.id]) }}>Zatwierdź odpowiedź</button>
         <button className={ghost} disabled={i === 0} onClick={() => setI(i - 1)}>← Poprzednie</button>
         <button className={green} disabled={i >= order.length - 1} onClick={() => setI(i + 1)}>Następne pytanie →</button>
         <button className={ghost} onClick={() => toggleFav(q.id)}>{favs.includes(q.id) ? '★ Usuń z ulubionych' : '☆ Dodaj do ulubionych'}</button>
@@ -137,8 +138,9 @@ function Exam({ qs, cn, onFinish }: any) {
   const pick = (k: string) => {
     if (Date.now() - lastGo.current < 500 || posR.current.stage !== 'answer') return  // ochrona przed podwójnym kliknięciem
     const q = listR.current[posR.current.i]
-    if (q.kind === 'basic') next(k); else { selR.current = k; setSel(k) }
+    selR.current = k; setSel(k)
   }
+  const skip = () => { if (posR.current.stage === 'learn' && Date.now() - lastGo.current >= 300) { vref.current?.pause(); if (vid === 'playing') setVid('done'); go(posR.current.i, 'answer') } }
   const confirm = () => { if (selR.current && Date.now() - lastGo.current >= 500) next(selR.current) }
   const play = () => { if (vid === 'idle') { vref.current?.play(); setVid('playing') } }
 
@@ -186,7 +188,9 @@ function Exam({ qs, cn, onFinish }: any) {
         : <img src={MEDIA + m} alt="" className="rounded-xl max-h-96 mx-auto" />)}
       {basic ? <>
         {!canAns && <p className="text-sm text-slate-500">Przeczytaj pytanie{isVid ? ' i obejrzyj film' : ''}. Odpowiedź będzie możliwa po zakończeniu odliczania.</p>}
-        <div className="grid grid-cols-2 gap-4">{[['T', 'TAK'], ['N', 'NIE']].map(([k, t]) => <button key={k} disabled={!canAns} onClick={() => pick(k)} className={btn + 'py-6 text-2xl font-bold bg-[#14213d] text-white dark:bg-slate-600'}>{t}</button>)}</div></>
+        <div className="grid grid-cols-2 gap-4">{[['T', 'TAK'], ['N', 'NIE']].map(([k, t]) => <button key={k} disabled={!canAns} onClick={() => pick(k)} className={btn + 'py-6 text-2xl font-bold text-white ' + (sel === k ? 'bg-emerald-600 ring-4 ring-emerald-300' : 'bg-[#14213d] dark:bg-slate-600')}>{t}</button>)}</div>
+        <button className={green + ' text-lg w-full'} disabled={!canAns || !sel} onClick={confirm}>ZATWIERDŹ ODPOWIEDŹ</button>
+        {!canAns && <button className={ghost + ' w-full'} onClick={skip}>Pomiń czekanie i przejdź do odpowiedzi →</button>}</>
       : <>
         <div className="grid gap-2">{[['A', q.answer_a], ['B', q.answer_b], ['C', q.answer_c]].map(([k, t]) => <button key={k} onClick={() => pick(k)} className={'text-left rounded-2xl border-2 px-4 py-3.5 transition enabled:hover:border-emerald-400 ' + (sel === k ? 'border-slate-800 bg-slate-100 dark:bg-slate-700' : 'border-slate-300 dark:border-slate-600')}><b className="mr-2">{k}.</b>{t}</button>)}</div>
         <button className={green + ' text-lg'} disabled={!sel} onClick={confirm}>ZATWIERDŹ ODPOWIEDŹ</button></>}
