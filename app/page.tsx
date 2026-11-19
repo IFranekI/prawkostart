@@ -4,10 +4,12 @@ import { sb } from '@/lib/supabase'
 
 type Q = { id: number; number: number; category_id: number; text: string; kind: string; answer_a: string; answer_b: string; answer_c: string; correct: string; media: string; points: number; explanation: string }
 const NAV = [['home','Strona główna'],['learn','Nauka'],['all','Wszystkie pytania'],['cats','Kategorie'],['exam','Egzamin państwowy'],['wrong','Błędne pytania'],['favs','Ulubione'],['stats','Statystyki'],['profile','Profil']]
+
 const card = 'rounded-3xl bg-white dark:bg-slate-800 border border-stone-100 dark:border-slate-700 shadow-[0_2px_24px_rgba(20,33,61,0.06)] p-6'
 const btn = 'rounded-2xl px-5 py-2.5 font-semibold transition active:scale-[.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed '
 const green = btn + 'bg-emerald-600 text-white shadow-sm', navy = btn + 'bg-[#14213d] text-white dark:bg-slate-600', ghost = btn + 'border border-stone-300 dark:border-slate-600 bg-white/60 dark:bg-transparent'
 const inp = 'rounded-2xl border border-stone-300 dark:border-slate-600 bg-white dark:bg-transparent px-4 py-2.5 outline-none focus:ring-2 ring-emerald-300 '
+
 const MEDIA = (process.env.NEXT_PUBLIC_SUPABASE_URL || '') + '/storage/v1/object/public/media/'
 const shuffle = <T,>(a: T[]) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]] } return r }
 const mmss = (s: number) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0')
